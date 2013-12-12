@@ -7,7 +7,6 @@
 #include <QPointF>
 #include <QVector>
 
-#include "dialog.h"
 #include "curva.h"
 
 namespace Ui {
@@ -59,5 +58,7 @@ private slots:
     void on_brushSizeSlider_valueChanged(int value);
     void on_corCurvaBtn_clicked();
     void on_corFundoBtn_clicked();
+    void on_commandLinkButton_clicked();
+    void on_saveFileDialog_clicked();
 };
 #endif // MAINWINDOW_H
