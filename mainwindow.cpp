@@ -21,8 +21,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     buffer.fill(corFundo);
 
-    movingPoint = false;
+    corFundo = Qt::white;
+    corCaneta = Qt::black;
 
+    curveIndex = 0;
+    pointIndex = 0;
+
+    brushSize = 1;
+
+    movingPoint = false;
     onThePath = false;
 
     this->interfaceUpdate();
