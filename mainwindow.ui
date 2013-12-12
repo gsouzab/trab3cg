@@ -177,13 +177,6 @@
      <height>22</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
-    </property>
-    <addaction name="actionAbrir_arquivo"/>
-   </widget>
-   <addaction name="menuFile"/>
   </widget>
   <action name="actionCarregar_descrito">
    <property name="text">

@@ -390,3 +390,8 @@ void MainWindow::on_saveFileDialog_clicked()
     }
 
 }
+
+void MainWindow::on_saveImageDialog_clicked()
+{
+
+}

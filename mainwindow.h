@@ -4,10 +4,8 @@
 #include <QMainWindow>
 #include <QMouseEvent>
 #include <QPoint>
-#include <QPointF>
 #include <QVector>
 
-#include "dialog.h"
 #include "curva.h"
 
 namespace Ui {
@@ -32,12 +30,11 @@ public:
     void mouseMoveEvent(QMouseEvent *e);
 private:
     Ui::MainWindow *ui;
-    Dialog *fileExplorer;
     QString filePath;
     QPainter *painter;
-    float brushSize = 1;
-    QColor corFundo = Qt::white;
-    QColor corCaneta = Qt::black;
+    float brushSize;
+    QColor corFundo;
+    QColor corCaneta;
 
     void desenhaCurvas();
     void desenhaBezier(QVector<QPoint>);
@@ -49,15 +46,17 @@ private:
 
     QPoint mouseStart;
     bool movingPoint;
-    int curveIndex = 0;
-    int pointIndex = 0;
+    int curveIndex;
+    int pointIndex;
     bool onThePath;
 
 
 private slots:
-    void on_fileDialogOpen_clicked();
     void on_brushSizeSlider_valueChanged(int value);
     void on_corCurvaBtn_clicked();
     void on_corFundoBtn_clicked();
+    void on_fileDialogOpen_clicked();
+    void on_saveFileDialog_clicked();
+    void on_saveImageDialog_clicked();
 };
 #endif // MAINWINDOW_H

@@ -18,5 +18,4 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     curva.h
 
-FORMS    += mainwindow.ui \
-    dialog.ui
+FORMS    += mainwindow.ui
