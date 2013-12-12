@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     onThePath = false;
 
     this->interfaceUpdate();
+
 }
 
 MainWindow::~MainWindow()
