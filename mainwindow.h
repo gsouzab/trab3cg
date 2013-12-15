@@ -24,6 +24,7 @@ public:
     QString getFilePath() const;
     void setFilePath(const QString &value);
     QImage buffer;
+    QImage bufferExport;
     QVector<Curva> curvas;
     bool criarBezierManual;
     Curva curvamanual;
@@ -36,6 +37,7 @@ private:
     Ui::MainWindow *ui;
     QString filePath;
     QPainter *painter;
+    QPainter *painterExport;
     float brushSize;
     int LOD;
     QColor corFundo;

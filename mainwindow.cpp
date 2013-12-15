@@ -23,10 +23,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->labelPrincipal->setMouseTracking(true);
 
     buffer = QImage(600,500, QImage::Format_ARGB32);
+    bufferExport = buffer;
 
     painter = new QPainter(&buffer);
+    painterExport= new QPainter(&bufferExport);
 
     buffer.fill(corFundo);
+    bufferExport.fill(corFundo);
 
     corFundo = Qt::white;
     corCaneta = Qt::black;
@@ -107,10 +110,12 @@ void MainWindow::on_fileDialogOpen_clicked()
 void MainWindow::interfaceUpdate(void)
 {
     buffer.fill(corFundo);
+    bufferExport.fill(corFundo);
 
     desenhaCurvas();
 
     ui->labelPrincipal->setPixmap(QPixmap::fromImage(buffer));
+
     update();
 }
 
@@ -128,8 +133,10 @@ void MainWindow::desenhaBezier(QVector<QPoint> pontos)
     this->desenhaLinha(pontos.at(2),pontos.at(3));
 
     painter->save();
+    painterExport->save();
 
     painter->setRenderHint(QPainter::Antialiasing, true);
+    painterExport->setRenderHint(QPainter::Antialiasing, true);
 
     QPainterPath path(pontos.at(0));
 
@@ -159,10 +166,11 @@ void MainWindow::desenhaBezier(QVector<QPoint> pontos)
     }
 
     painter->setPen(QPen(corCaneta, brushSize));
+    painterExport->setPen(QPen(corCaneta, brushSize));
     painter->drawPath(path);
-
+    painterExport->drawPath(path);
     painter->restore();
-
+    painterExport->restore();
 }
 
 void MainWindow::desenhaHermite(QVector<QPoint> pontos)
@@ -626,7 +634,7 @@ void MainWindow::on_saveImageDialog_clicked()
             QMessageBox::information(0, "error", file.errorString());
         }
 
-         buffer.save(newFilePath, "PNG"); // writes image into ba in PNG format
+         bufferExport.save(newFilePath, "PNG"); // writes image into ba in PNG format
     }
 
 }
