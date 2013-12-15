@@ -133,8 +133,9 @@ void MainWindow::desenhaBezier(QVector<QPoint> pontos)
 
     QPainterPath path(pontos.at(0));
 
-    for(float t=0.0;t<=1.0;t+=0.001)
+    for(int i=1;i<=LOD;++i)
     {
+        float t = (float) i/LOD;
 
         // funcao parametrica da curva de bezier
 
@@ -197,7 +198,7 @@ void MainWindow::desenhaHermite(QVector<QPoint> pontos)
 
     for(int i=1;i<=LOD;++i)
     {
-        float t = (float) (i/(LOD-1));
+        float t = (float) i/LOD;
 
         // funcao parametrica da curva de hermite
         float b0 =  2*(t*t*t) - 3*(t*t) + 1;
@@ -422,31 +423,39 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
                     QPainterPathStroker stroker;
                     stroker.setWidth(6);
 
+                    //ponto de inicio da curva
+                    QPoint p1(one);
+                    //ponto final da curva
+                    QPoint p2(two);
+                    //tangente do ponto inicial
+                    QPoint t1(three-one);
+                    //tangente do ponto final
+                    QPoint t2(four-two);
 
-                    QPainterPath path;
+                    QPainterPath path(p1);
 
-                    for(float t=0.0;t<=1.0;t+=.0001)
+                    for(int i=1;i<=LOD;++i)
                     {
+                        float t = (float) i/LOD;
 
-                        // calculate blending functions
-                        float b0 =  2*t*t*t - 3*t*t + 1;
-                        float b1 = -2*t*t*t + 3*t*t;
-                        float b2 = t*t*t - 2*t*t + t;
-                        float b3 = t*t*t - t*t;
+                        // funcao parametrica da curva de hermite
+                        float b0 =  2*(t*t*t) - 3*(t*t) + 1;
+                        float b1 = -2*(t*t*t) + 3*(t*t);
+                        float b2 = (t*t*t) - 2*(t*t) + t;
+                        float b3 = (t*t*t) - (t*t);
 
-                        // calculate the x,y and z of the curve point
-                        float x = b0*one.x() +
-                                  b1*two.x() +
-                                  b2*three.x() +
-                                  b3*four.x() ;
+                        // calculando o x e o y na curva
+                        float x = b0*p1.x() +
+                                  b1*p2.x() +
+                                  b2*t1.x() +
+                                  b3*t2.x();
 
-                        float y = b0*one.y() +
-                                  b1*two.y() +
-                                  b2*three.y() +
-                                  b3*four.y() ;
+                        float y = b0*p1.y() +
+                                  b1*p2.y() +
+                                  b2*t1.y() +
+                                  b3*t2.y();
 
-
-                        path.lineTo(x,y);
+                        path.lineTo(QPointF(x,y));
                     }
 
 
@@ -642,11 +651,6 @@ void MainWindow::CriarCurvaManual(QPoint pos){
 }
 
 void MainWindow::on_criarBezier_clicked(){
-   /* QMessageBox dBezier;
-    dBezier.setWindowTitle("Bezier");
-    dBezier.setText("Insira seus pontos");
-    dBezier.exec();
-*/
 
     QTime midnight(0, 0, 0);
     qsrand(midnight.secsTo(QTime::currentTime()));
