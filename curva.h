@@ -13,7 +13,7 @@ public:
     void setTipoCurva(int value);
     QVector<QPoint> pontosControle;
 
-    enum {BEZIER,HERMIT};
+    enum {BEZIER,HERMITE};
 
 private:
     int tipoCurva;

@@ -3,11 +3,18 @@
 #include <QPainter>
 #include <QFile>
 #include <QMessageBox>
+#include <QBuffer>
 #include <qcolordialog.h>
 #include <stdlib.h>
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+using namespace std;
+
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -29,8 +36,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     brushSize = 1;
 
+    LOD = 20;
+
     movingPoint = false;
     onThePath = false;
+
+    criarBezierManual =false;
+    curvamanual.setTipoCurva(Curva::BEZIER);
 
     this->interfaceUpdate();
 
@@ -60,7 +72,16 @@ void MainWindow::desenhaCurvas()
     for(iterator = curvas.begin(); iterator != curvas.end(); iterator++)
     {
 
-        this->desenhaBezier(iterator->pontosControle);
+        if(iterator->getTipoCurva() == Curva::BEZIER)
+        {
+
+            this->desenhaBezier(iterator->pontosControle);
+        }
+        else
+        {
+            this->desenhaHermite(iterator->pontosControle);
+        }
+
     }
 }
 
@@ -110,16 +131,99 @@ void MainWindow::desenhaBezier(QVector<QPoint> pontos)
 
     painter->setRenderHint(QPainter::Antialiasing, true);
 
-    QPainterPath path;
+    QPainterPath path(pontos.at(0));
 
-    //Desenhando a bezier cubica
-    path.moveTo(pontos.at(0));
-    path.cubicTo(pontos.at(1),pontos.at(2),pontos.at(3));
+    for(float t=0.0;t<=1.0;t+=0.001)
+    {
+
+        // funcao parametrica da curva de bezier
+
+        float b0 = -(t*t*t) + 3*t*t -3*t + 1;
+        float b1 = 3*(t*t*t) -6*(t*t) + 3*t;
+        float b2 = -3*(t*t*t) + 3*t*t;
+        float b3 = t*t*t;
+
+        // calculando o x e o y na curva
+        float x = b0*pontos.at(0).x() +
+                  b1*pontos.at(1).x() +
+                  b2*pontos.at(2).x() +
+                  b3*pontos.at(3).x() ;
+
+        float y = b0*pontos.at(0).y() +
+                  b1*pontos.at(1).y() +
+                  b2*pontos.at(2).y() +
+                  b3*pontos.at(3).y() ;
+
+        path.lineTo(QPointF(x,y));
+    }
 
     painter->setPen(QPen(corCaneta, brushSize));
     painter->drawPath(path);
 
     painter->restore();
+
+}
+
+void MainWindow::desenhaHermite(QVector<QPoint> pontos)
+{
+
+    painter->save();
+
+    painter->setRenderHint(QPainter::Antialiasing, true);
+
+    painter->setPen(QPen(corCaneta, brushSize));
+
+    //pontos de controle
+    this->desenhaPonto(pontos.at(0));
+    this->desenhaPonto(pontos.at(1));
+
+    //tangentes
+    this->desenhaPonto(pontos.at(2));
+    this->desenhaPonto(pontos.at(3));
+
+    this->desenhaLinha(pontos.at(2),pontos.at(0));
+    this->desenhaLinha(pontos.at(3),pontos.at(1));
+
+    //ponto de inicio da curva
+    QPoint p1(pontos.at(0));
+    //ponto final da curva
+    QPoint p2(pontos.at(1));
+    //tangente do ponto inicial
+    QPoint t1(pontos.at(2)-pontos.at(0));
+    //tangente do ponto final
+    QPoint t2(pontos.at(3)-pontos.at(1));
+
+    QPainterPath path(p1);
+
+    for(int i=1;i<=LOD;++i)
+    {
+        float t = (float) (i/(LOD-1));
+
+        // funcao parametrica da curva de hermite
+        float b0 =  2*(t*t*t) - 3*(t*t) + 1;
+        float b1 = -2*(t*t*t) + 3*(t*t);
+        float b2 = (t*t*t) - 2*(t*t) + t;
+        float b3 = (t*t*t) - (t*t);
+
+        // calculando o x e o y na curva
+        float x = b0*p1.x() +
+                  b1*p2.x() +
+                  b2*t1.x() +
+                  b3*t2.x();
+
+        float y = b0*p1.y() +
+                  b1*p2.y() +
+                  b2*t1.y() +
+                  b3*t2.y();
+
+        path.lineTo(QPointF(x,y));
+    }
+
+    painter->setPen(QPen(corCaneta, brushSize));
+    painter->drawPath(path);
+
+    painter->restore();
+
 }
 
 void MainWindow::desenhaPonto(const QPoint &pos)
@@ -186,10 +290,29 @@ void MainWindow::leArquivoControle()
         }
         else if(line.compare("H") == 0)
         {
+            QPoint ponto;
 
+            curva.setTipoCurva(Curva::HERMITE);
+
+            //lendo os 4 pontos de controle
+
+            for(int i=0;i<4;i++)
+            {
+                line = in.readLine();
+
+                fields = line.split(" ");
+                ponto = QPoint(fields.at(0).toInt(),fields.at(1).toInt());
+                curva.pontosControle.append(ponto);
+            }
+
+            curvas.append(curva);
+
+            curva.pontosControle.clear();
         }
 
     }
+
+    file.close();
 }
 
 void MainWindow::on_brushSizeSlider_valueChanged(int value)
@@ -234,6 +357,8 @@ void MainWindow::on_corFundoBtn_clicked()
 void MainWindow::mousePressEvent(QMouseEvent *e)
 {
 
+    CriarCurvaManual(e->pos() - ui->labelPrincipal->pos());
+
     ui->labelPrincipal->setCursor(Qt::ClosedHandCursor);
 
     if (e->button() == Qt::LeftButton)
@@ -251,40 +376,91 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
             QPoint three(iterator->pontosControle.at(2));
             QPoint four(iterator->pontosControle.at(3));
 
-            qDebug() << iterator->pontosControle;
-
             if (markContains(one, (e->pos()  - ui->labelPrincipal->pos()))) {
                 movingPoint = true;
                 pointIndex = 0;
+                curveIndex = index;
+
             }
             else if (markContains(two, (e->pos()  - ui->labelPrincipal->pos()))) {
                 movingPoint = true;
                 pointIndex = 1;
+                curveIndex = index;
+
             }
             else if (markContains(three, (e->pos()  - ui->labelPrincipal->pos()))) {
                 movingPoint = true;
                 pointIndex = 2;
+                curveIndex = index;
+
             }
             else if (markContains(four, (e->pos()  - ui->labelPrincipal->pos()))) {
                 movingPoint = true;
                 pointIndex = 3;
+                curveIndex = index;
+
             }
             else {
-                QPainterPathStroker stroker;
-                stroker.setWidth(6);
-                QPainterPath path(one);
-                path.cubicTo(two, three, four);
 
-                QPainterPath stroked = stroker.createStroke(path);
-                if (stroked.contains((e->pos() - ui->labelPrincipal->pos()))) {
-                    qDebug()<<"on the path";
+                if(iterator->getTipoCurva() == Curva::BEZIER)
+                {
+                    QPainterPathStroker stroker;
+                    stroker.setWidth(6);
+                    QPainterPath path(one);
+                    path.cubicTo(two, three, four);
 
-                    onThePath = true;
+                    QPainterPath stroked = stroker.createStroke(path);
+                    if (stroked.contains((e->pos() - ui->labelPrincipal->pos()))) {
 
+                        onThePath = true;
+                        curveIndex = index;
+
+                    }
                 }
+                else
+                {
+                    QPainterPathStroker stroker;
+                    stroker.setWidth(6);
+
+
+                    QPainterPath path;
+
+                    for(float t=0.0;t<=1.0;t+=.0001)
+                    {
+
+                        // calculate blending functions
+                        float b0 =  2*t*t*t - 3*t*t + 1;
+                        float b1 = -2*t*t*t + 3*t*t;
+                        float b2 = t*t*t - 2*t*t + t;
+                        float b3 = t*t*t - t*t;
+
+                        // calculate the x,y and z of the curve point
+                        float x = b0*one.x() +
+                                  b1*two.x() +
+                                  b2*three.x() +
+                                  b3*four.x() ;
+
+                        float y = b0*one.y() +
+                                  b1*two.y() +
+                                  b2*three.y() +
+                                  b3*four.y() ;
+
+
+                        path.lineTo(x,y);
+                    }
+
+
+                    QPainterPath stroked = stroker.createStroke(path);
+                    if (stroked.contains((e->pos() - ui->labelPrincipal->pos()))) {
+
+                        onThePath = true;
+                        curveIndex = index;
+
+                    }
+                }
+
             }
 
-            curveIndex = index;
 
             index++;
 
@@ -293,13 +469,8 @@ void MainWindow::mousePressEvent(QMouseEvent *e)
 
         if (movingPoint || onThePath)
         {
-            //qDebug() << "on the path or moving";
             mouseStart = (e->pos() - ui->labelPrincipal->pos());
-            //qDebug() << *moving;
         }
-
-        //desenhaCurvas();
-        //interfaceUpdate();
 
     }
 }
@@ -309,7 +480,6 @@ void MainWindow::mouseMoveEvent(QMouseEvent *e)
     if (movingPoint) {
         QPoint diff = (e->pos() - ui->labelPrincipal->pos()) - mouseStart;
 
-        //qDebug() << diff;
         QPoint newPoint = QPoint(diff + curvas.at(curveIndex).pontosControle.at(pointIndex));
 
         int xMin = 0 + pointSize;
@@ -369,7 +539,6 @@ void MainWindow::mouseMoveEvent(QMouseEvent *e)
 void MainWindow::mouseReleaseEvent(QMouseEvent *)
 {
     ui->labelPrincipal->setCursor(Qt::OpenHandCursor);
-    //qDebug()<<"releasing";
     movingPoint = false;
     onThePath = false;
 }
@@ -394,6 +563,39 @@ void MainWindow::on_saveFileDialog_clicked()
 
     if(!newFilePath.isEmpty())
     {
+        QFile file(newFilePath);
+
+        if(!file.open(QIODevice::WriteOnly))
+        {
+            QMessageBox::information(0, "error", file.errorString());
+        }
+
+        QTextStream out(&file);
+
+
+        QVector<Curva>::iterator iterator;
+
+        for(iterator = curvas.begin(); iterator != curvas.end(); iterator++)
+        {
+            if(iterator->getTipoCurva() == Curva::BEZIER)
+            {
+                out << "B\n";
+            }
+            else
+            {
+                out << "H\n";
+            }
+
+            for(int i =0;i<4;i++)
+            {
+                out << iterator->pontosControle[i].x();
+                out << " ";
+                out << iterator->pontosControle[i].y();
+                out << "\n";
+            }
+        }
+
+        file.close();
 
     }
 
@@ -401,5 +603,70 @@ void MainWindow::on_saveFileDialog_clicked()
 
 void MainWindow::on_saveImageDialog_clicked()
 {
+    QString newFilePath = QFileDialog::getSaveFileName(this,
+                                                       tr("Exportar imagem"),
+                                                       QDir::currentPath(),
+                                                    tr("PNG Files (*.png)"));
+
+    if(!newFilePath.isEmpty())
+    {
+        QFile file(newFilePath);
+
+        if(!file.open(QIODevice::WriteOnly))
+        {
+            QMessageBox::information(0, "error", file.errorString());
+        }
+
+         buffer.save(newFilePath, "PNG"); // writes image into ba in PNG format
+    }
+
+}
+
+void MainWindow::on_checkboxCriarBezierManual_stateChanged(int arg1)
+{
+    if (arg1) criarBezierManual=true;
+    else criarBezierManual=false;
+
+
+}
+
+void MainWindow::CriarCurvaManual(QPoint pos){
+    if (criarBezierManual){
+        curvamanual.pontosControle.append(pos);
+        if ( curvamanual.pontosControle.size() == 4) {
+            curvas.append(curvamanual);
+            curvamanual.pontosControle.clear();
+            this->interfaceUpdate();
+        }
+    }
+}
+
+void MainWindow::on_criarBezier_clicked(){
+   /* QMessageBox dBezier;
+    dBezier.setWindowTitle("Bezier");
+    dBezier.setText("Insira seus pontos");
+    dBezier.exec();
+*/
+
+    QTime midnight(0, 0, 0);
+    qsrand(midnight.secsTo(QTime::currentTime()));
+
+    Curva curva;
+    curva.setTipoCurva(Curva::BEZIER);
+
+    QPoint ponto1 (qrand()%500,qrand()%500);
+    QPoint ponto2 (qrand()%500,qrand()%500);
+    QPoint ponto3 (qrand()%500,qrand()%500);
+    QPoint ponto4 (qrand()%500,qrand()%500);
+
+    curva.pontosControle.append(ponto1);
+    curva.pontosControle.append(ponto2);
+    curva.pontosControle.append(ponto3);
+    curva.pontosControle.append(ponto4);
+
+    curvas.append(curva);
+
+    curva.pontosControle.clear();
+    this->interfaceUpdate();
 
 }

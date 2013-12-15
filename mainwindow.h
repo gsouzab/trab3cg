@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QMouseEvent>
 #include <QPoint>
+#include <QTime>
 #include <QVector>
 
 #include "curva.h"
@@ -24,25 +25,31 @@ public:
     void setFilePath(const QString &value);
     QImage buffer;
     QVector<Curva> curvas;
+    bool criarBezierManual;
+    Curva curvamanual;
 
     void mousePressEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *e);
+
 private:
     Ui::MainWindow *ui;
     QString filePath;
     QPainter *painter;
     float brushSize;
+    int LOD;
     QColor corFundo;
     QColor corCaneta;
 
     void desenhaCurvas();
     void desenhaBezier(QVector<QPoint>);
+    void desenhaHermite(QVector<QPoint> pontos);
     void interfaceUpdate();
     void desenhaPonto(const QPoint &pt);
     void desenhaLinha(const QPoint &inicio,const QPoint &fim);
     bool markContains(const QPoint &pt, const QPoint &coord) const;
     void leArquivoControle();
+    void CriarCurvaManual(QPoint pos);
 
     QPoint mouseStart;
     bool movingPoint;
@@ -58,5 +65,9 @@ private slots:
     void on_fileDialogOpen_clicked();
     void on_saveFileDialog_clicked();
     void on_saveImageDialog_clicked();
+
+    void on_criarBezier_clicked();
+    void on_checkboxCriarBezierManual_stateChanged(int arg1);
+
 };
 #endif // MAINWINDOW_H

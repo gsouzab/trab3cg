@@ -18,4 +18,5 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     curva.h
 
-FORMS    += mainwindow.ui
+FORMS    += \
+    mainwindow.ui
