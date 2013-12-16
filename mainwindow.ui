@@ -50,6 +50,12 @@
          <height>35</height>
         </size>
        </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Carregar Arquivo</string>
        </property>
@@ -57,6 +63,12 @@
      </item>
      <item>
       <widget class="QCommandLinkButton" name="saveFileDialog">
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Salvar Arquivo</string>
        </property>
@@ -64,6 +76,12 @@
      </item>
      <item>
       <widget class="QCommandLinkButton" name="saveImageDialog">
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>Salvar Imagem</string>
        </property>
@@ -176,8 +194,14 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Segoe UI</family>
+      <pointsize>7</pointsize>
+     </font>
+    </property>
     <property name="text">
-     <string>Criar Bezier (rand)</string>
+     <string>Criar Bezier (random)</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="checkboxCriarBezierManual">

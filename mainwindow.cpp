@@ -177,10 +177,12 @@ void MainWindow::desenhaHermite(QVector<QPoint> pontos)
 {
 
     painter->save();
+    painterExport->save();
 
     painter->setRenderHint(QPainter::Antialiasing, true);
-
+    painterExport->setRenderHint(QPainter::Antialiasing, true);
     painter->setPen(QPen(corCaneta, brushSize));
+    painterExport->setPen(QPen(corCaneta, brushSize));
 
     //pontos de controle
     this->desenhaPonto(pontos.at(0));
@@ -229,10 +231,11 @@ void MainWindow::desenhaHermite(QVector<QPoint> pontos)
     }
 
     painter->setPen(QPen(corCaneta, brushSize));
+    painterExport->setPen(QPen(corCaneta, brushSize));
     painter->drawPath(path);
-
+    painterExport->drawPath(path);
     painter->restore();
-
+    painterExport->restore();
 }
 
 void MainWindow::desenhaPonto(const QPoint &pos)
@@ -665,11 +668,14 @@ void MainWindow::on_criarBezier_clicked(){
 
     Curva curva;
     curva.setTipoCurva(Curva::BEZIER);
+    int max;
+    if (buffer.height()< buffer.width()) max=buffer.height();
+    else max = buffer.width();
 
-    QPoint ponto1 (qrand()%500,qrand()%500);
-    QPoint ponto2 (qrand()%500,qrand()%500);
-    QPoint ponto3 (qrand()%500,qrand()%500);
-    QPoint ponto4 (qrand()%500,qrand()%500);
+    QPoint ponto1 (qrand()%max,qrand()%max);
+    QPoint ponto2 (qrand()%max,qrand()%max);
+    QPoint ponto3 (qrand()%max,qrand()%max);
+    QPoint ponto4 (qrand()%max,qrand()%max);
 
     curva.pontosControle.append(ponto1);
     curva.pontosControle.append(ponto2);
@@ -682,3 +688,4 @@ void MainWindow::on_criarBezier_clicked(){
     this->interfaceUpdate();
 
 }
+
